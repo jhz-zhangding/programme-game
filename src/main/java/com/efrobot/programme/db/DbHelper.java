@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.efrobot.programme.bean.ExecuteModule;
+import com.efrobot.programme.bean.FaceAndActionEntity;
 import com.efrobot.programme.bean.MainProject;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.support.ConnectionSource;
@@ -40,6 +41,7 @@ public class DbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource) {
         try {
+            TableUtils.createTable(connectionSource, FaceAndActionEntity.class);
             TableUtils.createTable(connectionSource, MainProject.class);
             TableUtils.createTable(connectionSource, ExecuteModule.class);
         } catch (SQLException e) {

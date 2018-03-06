@@ -5,6 +5,7 @@
     android:background="@mipmap/main_bg">
 
     <RelativeLayout
+        android:id="@+id/title_layout"
         android:layout_width="match_parent"
         android:layout_height="80dp">
 
@@ -30,8 +31,9 @@
         android:id="@+id/left_relat"
         android:layout_width="200dp"
         android:layout_height="match_parent"
+        android:layout_below="@+id/title_layout"
         android:layout_marginLeft="30dp"
-        android:layout_marginTop="101dp">
+        android:layout_marginTop="21dp">
 
         <TextView
             android:id="@+id/new_scene"
@@ -127,43 +129,94 @@
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/right_relat"
         android:layout_width="260dp"
         android:layout_height="match_parent"
+        android:layout_below="@+id/title_layout"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="101dp"
+        android:layout_marginTop="21dp"
         android:layout_toRightOf="@+id/left_relat">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/menu_btn_layout"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/trigger_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="22sp"
-                android:textColor="@color/white"
+                android:background="@drawable/button_bg"
                 android:text="触发"
-                android:background="@drawable/button_bg"
-                />
+                android:textColor="@color/white"
+                android:textSize="22sp" />
 
             <TextView
+                android:id="@+id/output_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:text="输出"
-                android:background="@drawable/button_bg"
                 android:layout_marginLeft="25dp"
-                />
-
-
+                android:background="@drawable/button_bg"
+                android:text="输出"
+                android:textColor="@color/white"
+                android:textSize="22sp" />
         </LinearLayout>
 
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/menu_btn_layout"
+            android:layout_marginTop="20dp">
 
+            <include
+                android:id="@+id/chufa_condition_layout"
+                layout="@layout/programme_menu_layout"
+                android:visibility="visible" />
+
+            <include
+                android:id="@+id/menu_include_layout"
+                layout="@layout/menu_flag_list_view"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:id="@+id/all_item_rl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/menu_include_layout"
+                android:layout_marginTop="20dp">
+
+                <include
+                    android:id="@+id/tts_condition_layout"
+                    layout="@layout/tts_include_layout"
+                    android:visibility="gone"
+                    />
+
+                <include
+                    android:id="@+id/action_condition_layout"
+                    layout="@layout/action_include_layout"
+                    android:visibility="gone" />
+
+                <include
+                    android:id="@+id/face_condition_layout"
+                    layout="@layout/face_include_layout"
+                    android:visibility="gone" />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/title_layout"
+        android:layout_marginTop="21dp"
+        android:layout_toRightOf="@+id/right_relat">
+
+
+    </RelativeLayout>
 
 </RelativeLayout>

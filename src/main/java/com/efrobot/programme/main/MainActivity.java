@@ -8,16 +8,25 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.efrobot.programme.R;
+import com.efrobot.programme.adapter.AddFaceAndActionAdapter;
+import com.efrobot.programme.adapter.ItemContentAdapter;
 import com.efrobot.programme.adapter.MainProjectAdapter;
 import com.efrobot.programme.base.BaseActivity;
+import com.efrobot.programme.bean.FaceAndActionEntity;
 import com.efrobot.programme.bean.MainProject;
+import com.efrobot.programme.bean.TypeBean;
+import com.efrobot.programme.dao.DataManager;
 import com.efrobot.programme.db.DBManager;
 import com.efrobot.programme.dialog.ItemNameDialog;
+import com.efrobot.programme.utils.DiyFaceAndActionUtils;
 import com.efrobot.programme.view.drag.DragListView;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
@@ -37,6 +46,29 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private boolean isShowDelProject = false;
 
+    private RelativeLayout typeIncludeRl;
+
+    private View triggerLayout, menuLayout, ttsLayout, actionLayout, faceLayout;
+
+    //输出分类
+    private List<String> triggerList = new ArrayList<>();
+
+
+    private HashMap<String, String> mFaceList;
+    private HashMap<String, String> mActionList;
+    private int type = 1;
+
+    private ListView typeListView;
+
+    private ListView ttsListView;
+    private ListView faceListView;
+    private ListView actionListView;
+
+    private String[] types = new String[]{"说话", "动作", "表情"};
+    private List<TypeBean> typeBeans;
+    private ItemContentAdapter itemContentAdapter;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,18 +76,61 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         init();
         initListener();
+        initData();
         setProjectAdapter();
     }
 
     private void init() {
         dbManager = new DBManager(this);
         projectListView = findViewById(R.id.main_item_listview);
+
+        triggerLayout = findViewById(R.id.chufa_condition_layout);
+        menuLayout = findViewById(R.id.menu_include_layout);
+        ttsLayout = findViewById(R.id.tts_condition_layout);
+        actionLayout = findViewById(R.id.action_condition_layout);
+        faceLayout = findViewById(R.id.face_condition_layout);
+
+        typeIncludeRl = findViewById(R.id.all_item_rl);
+        typeListView = findViewById(R.id.menu_flag_list_view);
+        ttsListView = findViewById(R.id.tts_list_view);
+        faceListView = findViewById(R.id.face_list_view);
+        actionListView = findViewById(R.id.action_list_view);
     }
 
     private void initListener() {
         findViewById(R.id.new_scene).setOnClickListener(this);
         findViewById(R.id.edit_sence_item).setOnClickListener(this);
+
+        findViewById(R.id.trigger_btn).setOnClickListener(this);
+        findViewById(R.id.output_btn).setOnClickListener(this);
         projectListView.setOnItemClickListener(new OnProjectItemOnClick());
+        typeListView.setOnItemClickListener(new OnTypeItemOnClick());
+    }
+
+    private void initData() {
+        mFaceList = new DiyFaceAndActionUtils(this).readFaceData();
+        mActionList = new HashMap<>();
+        final List<FaceAndActionEntity> list = DataManager.getInstance(getContext()).queryAllAction();
+        if (list != null && !list.isEmpty()) {
+            int size = list.size();
+            for (int i = 0; i < size; i++) {
+                FaceAndActionEntity faceAndActionEntity = list.get(i);
+                mActionList.put(faceAndActionEntity.index, faceAndActionEntity.content + "(" + faceAndActionEntity.time + ")");
+            }
+        }
+
+        typeBeans = new ArrayList<>();
+        for (int i = 0; i < types.length; i++) {
+            TypeBean typeBean = new TypeBean();
+            typeBean.setName(types[i]);
+            typeBean.setType(i);
+            typeBeans.add(typeBean);
+        }
+        itemContentAdapter = new ItemContentAdapter(typeBeans);
+        typeListView.setAdapter(itemContentAdapter);
+
+        showFaceAndAction(1);
+        showFaceAndAction(2);
     }
 
     private void setProjectAdapter() {
@@ -82,6 +157,32 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             //切换项目
             mainProjectAdapter.setSelectPosition(i);
         }
+    }
+
+    class OnTypeItemOnClick implements AdapterView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            String content = typeBeans.get(i).getName();
+            switch (content) {
+                case "说话":
+                    showTypeListView(ttsLayout);
+                    break;
+                case "动作":
+                    showTypeListView(actionLayout);
+                    break;
+                case "表情":
+                    showTypeListView(faceLayout);
+                    break;
+            }
+        }
+    }
+
+    private void showTypeListView(View view) {
+        ttsLayout.setVisibility(View.GONE);
+        faceLayout.setVisibility(View.GONE);
+        actionLayout.setVisibility(View.GONE);
+        view.setVisibility(View.VISIBLE);
     }
 
     private final int UPDATE_PROJECT_MESSAGE = 1;
@@ -117,7 +218,23 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     mainProjectAdapter.setShowDelImg(isShowDelProject);
                 }
                 break;
+            case R.id.trigger_btn:
+                //触发
+                typeIncludeRl.setVisibility(View.GONE);
+                showView(triggerLayout);
+                break;
+            case R.id.output_btn:
+                //输出
+                typeIncludeRl.setVisibility(View.VISIBLE);
+                showView(menuLayout);
+                break;
         }
+    }
+
+    private void showView(View view) {
+        triggerLayout.setVisibility(View.GONE);
+        menuLayout.setVisibility(View.GONE);
+        view.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -163,6 +280,36 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         } else {
             toast("无有效内容");
+        }
+    }
+
+    AddFaceAndActionAdapter actionAdapter;
+    AddFaceAndActionAdapter faceAdapter;
+
+    /**
+     * 初始化Adapter
+     */
+    private void initAdapter() {
+        if (actionAdapter == null) {
+            actionAdapter = new AddFaceAndActionAdapter(getContext());
+            actionListView.setAdapter(actionAdapter);
+        }
+        if (faceAdapter == null) {
+            faceAdapter = new AddFaceAndActionAdapter(getContext());
+            faceListView.setAdapter(faceAdapter);
+        }
+    }
+
+    /**
+     * 显示动作或表情
+     */
+    public void showFaceAndAction(int myType) {
+        this.type = myType;
+        initAdapter();
+        if (type == 1) {
+            faceAdapter.setDataResource(mFaceList, 1);
+        } else if (type == 2) {
+            actionAdapter.setDataResource(mActionList, 2);
         }
     }
 }
