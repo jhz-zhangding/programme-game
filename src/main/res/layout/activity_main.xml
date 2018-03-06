@@ -1,10 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.efrobot.programme.main.MainActivity">
+    android:background="@mipmap/main_bg">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp">
 
 
-</android.support.constraint.ConstraintLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="編程游戲"
+            android:textColor="@color/white"
+            android:textSize="26sp" />
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="80dp"
+        android:background="@color/white" />
+
+
+    <RelativeLayout
+        android:id="@+id/left_relat"
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="101dp">
+
+        <TextView
+            android:id="@+id/new_scene"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/newsence_bg"
+            android:gravity="center"
+            android:padding="3dp"
+            android:text="新建场景"
+            android:textColor="@color/white"
+            android:textSize="@dimen/textsize_24" />
+
+        <RelativeLayout
+            android:id="@+id/list_Layout"
+            android:layout_width="wrap_content"
+            android:layout_height="530dp"
+            android:layout_below="@+id/new_scene"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/listview_item_bg">
+
+            <ImageView
+                android:id="@+id/edit_sence_item"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="@dimen/margin_5"
+                android:background="@drawable/item_edit_bg" />
+
+            <TextView
+                android:id="@+id/itemlistsplit"
+                android:layout_width="170dp"
+                android:layout_height="2dp"
+                android:layout_below="@+id/edit_sence_item"
+                android:layout_centerHorizontal="true"
+                android:background="#FFFFFF" />
+
+            <ListView
+                android:id="@+id/main_item_listview"
+                android:layout_width="match_parent"
+                android:layout_height="380dp"
+                android:layout_below="@+id/itemlistsplit"
+                android:layout_marginTop="10dp"
+                android:divider="#00000000"
+                android:scrollbars="none" />
+
+            <TextView
+                android:id="@+id/text1"
+                android:layout_width="170dp"
+                android:layout_height="2dp"
+                android:layout_below="@+id/main_item_listview"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="30dp"
+                android:background="#FFFFFF" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/text1">
+
+                <ImageView
+                    android:id="@+id/item_up"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:src="@mipmap/move_up_pressed"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/item_down"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:src="@mipmap/move_down_pressed"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/setting"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/newsence_bg"
+            android:gravity="center"
+            android:padding="3dp"
+            android:text="设置"
+            android:textColor="@color/white"
+            android:textSize="@dimen/textsize_24" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="260dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="101dp"
+        android:layout_toRightOf="@+id/left_relat">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:textColor="@color/white"
+                android:text="触发"
+                android:background="@drawable/button_bg"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:text="输出"
+                android:background="@drawable/button_bg"
+                android:layout_marginLeft="25dp"
+                />
+
+
+        </LinearLayout>
+
+
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

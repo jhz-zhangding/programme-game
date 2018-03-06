@@ -5,6 +5,16 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
-    <color name="aaa" >#ffffffff</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+
+    <!-- 通用蓝色背景色 -->
+    <color name="main_bg_color">#2676c6</color>
+
+    <color name="item_select">#ff8f00</color>
+
+    <color name="button_true">#FF8E01</color>
+
+    <color name="dialog_button_true">#B2CDEB</color>
 
 </resources>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@drawable/dialog_bg"
+    android:orientation="vertical"
+    android:padding="@dimen/padding_35">
+
+    <TextView
+        android:id="@+id/title"
+        android:textColor="@color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="@dimen/textsize_30" />
+
+    <LinearLayout
+        android:id="@+id/layout_sence"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/padding_20"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+        <EditText
+            android:id="@+id/input_file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="请输入场景名称(1-6个字符)"
+            android:imeOptions="actionDone"
+            android:background="@null"
+            android:textSize="@dimen/textsize_24" />
+        </LinearLayout>
+
+
+
+    <LinearLayout
+        android:id="@+id/layout_ultrasonic"
+        android:visibility="visible"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textColor="@color/white"
+                android:text="距离机器人"
+                android:textSize="@dimen/textsize_26"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/white">
+                <EditText
+                    android:id="@+id/input_ultrasonic"
+                    android:layout_width="100dp"
+                    android:layout_height="40dp"
+                    android:imeOptions="actionDone"
+                    android:maxLength="3"
+                    android:inputType="number"
+                    android:background="@null"
+                    android:textSize="@dimen/textsize_26" />
+            </LinearLayout>
+            <TextView
+                android:textColor="@color/white"
+                android:text="cm触发"
+                android:textSize="@dimen/textsize_26"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_gravity="center"
+            android:text="请输入10-200范围内的整数"
+            android:textSize="@dimen/textsize_26"
+            android:textColor="@color/item_select"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+
+        >
+
+        <TextView
+            android:id="@+id/tv_cancle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/padding_25"
+            android:layout_weight="2"
+            android:background="@drawable/dialog_button_color_background"
+            android:gravity="center"
+            android:paddingBottom="@dimen/padding_15"
+            android:paddingTop="@dimen/padding_15"
+            android:textSize="@dimen/textsize_19"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:textSize="@dimen/textsize_19"
+            android:id="@+id/tv_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:background="@drawable/dialog_button_color_background"
+            android:gravity="center"
+            android:paddingBottom="@dimen/padding_15"
+            android:paddingTop="@dimen/padding_15"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>
