@@ -33,7 +33,7 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/title_layout"
         android:layout_marginLeft="30dp"
-        android:layout_marginTop="21dp">
+        android:layout_marginTop="20dp">
 
         <TextView
             android:id="@+id/new_scene"
@@ -190,8 +190,7 @@
                 <include
                     android:id="@+id/tts_condition_layout"
                     layout="@layout/tts_include_layout"
-                    android:visibility="gone"
-                    />
+                    android:visibility="gone" />
 
                 <include
                     android:id="@+id/action_condition_layout"
@@ -213,8 +212,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/title_layout"
-        android:layout_marginTop="21dp"
-        android:layout_toRightOf="@+id/right_relat">
+        android:layout_marginTop="20dp"
+        android:layout_toRightOf="@+id/right_relat"
+        android:gravity="center">
+
+        <com.efrobot.programme.view.drag.DragListView
+            android:id="@+id/content_drag_list_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
 
     </RelativeLayout>

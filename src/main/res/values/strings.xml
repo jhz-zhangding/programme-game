@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">儿童编程</string>
+
+    <string-array name="mouse_key">
+        <item>电源</item>
+        <item>游戏</item>
+        <item>主页</item>
+        <item>返回</item>
+    </string-array>
 </resources>

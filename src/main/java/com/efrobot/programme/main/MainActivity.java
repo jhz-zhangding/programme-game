@@ -68,6 +68,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private List<TypeBean> typeBeans;
     private ItemContentAdapter itemContentAdapter;
 
+    private DragListView dragListView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +97,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         ttsListView = findViewById(R.id.tts_list_view);
         faceListView = findViewById(R.id.face_list_view);
         actionListView = findViewById(R.id.action_list_view);
+
+        dragListView = findViewById(R.id.content_drag_list_view);
     }
 
     private void initListener() {
@@ -311,5 +315,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (type == 2) {
             actionAdapter.setDataResource(mActionList, 2);
         }
+    }
+
+    /**
+     * 添加item 需要支持拖拽
+     */
+    private void addItem() {
+
     }
 }
