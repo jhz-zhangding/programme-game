@@ -16,6 +16,8 @@
     <!--微调布局默认距离上面多少-->
     <dimen name="default_fine_tuning_marge_top">5dp</dimen>
 
+    <dimen name="drag_item_margin_top">7dp</dimen>
+
 
     <dimen name="size_0dp">0dp</dimen>
     <dimen name="size_20dp">20dp</dimen>

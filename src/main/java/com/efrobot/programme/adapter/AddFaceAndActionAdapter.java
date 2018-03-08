@@ -35,6 +35,12 @@ public class AddFaceAndActionAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public FaceAndActionEntity getItemFromPosition(int position) {
+        FaceAndActionEntity result = null;
+        result = getItem(position);
+        return result;
+    }
+
     /**
      * 将Map数据转化为List形式
      *

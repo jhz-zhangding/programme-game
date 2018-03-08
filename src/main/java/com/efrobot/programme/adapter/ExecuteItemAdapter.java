@@ -17,7 +17,7 @@ import java.util.List;
 
 import static com.efrobot.programme.env.Constans.ExecuteContent.ACTION_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.FACE_TYPE;
-import static com.efrobot.programme.env.Constans.ExecuteContent.MOUKEY_TYPE;
+import static com.efrobot.programme.env.Constans.ExecuteContent.MOUSE_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.SPEECH_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.TIME_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.TOTAL_VIEW_COUNT;
@@ -33,6 +33,11 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
     private List<MouseBean> mouseBeanList;
 
+    private final int TYPE_TIME = 0;
+    private final int TYPE_MOUSE = 1;
+    private final int TYPE_SPEECH = 2;
+    private final int TYPE_TEXT = 3;
+
     public ExecuteItemAdapter(Context context, List<ExecuteModule> dataList) {
         super(context, dataList);
         inflater = LayoutInflater.from(context);
@@ -42,9 +47,19 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
     public int getItemViewType(int position) {
         ExecuteModule executeModule = getItem(position);
         int type = executeModule.getType();
-        if (type == TTS_TYPE || type == ACTION_TYPE || type == FACE_TYPE) {
-            //同种布局
-            return TTS_TYPE;
+        switch (type) {
+            case TIME_TYPE:
+                return TYPE_TIME;
+            case MOUSE_TYPE:
+                return TYPE_MOUSE;
+            case SPEECH_TYPE:
+                return TYPE_SPEECH;
+            case TTS_TYPE:
+                return TYPE_TEXT;
+            case ACTION_TYPE:
+                return TYPE_TEXT;
+            case FACE_TYPE:
+                return TYPE_TEXT;
         }
         return type;
     }
@@ -64,25 +79,25 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
         int type = getItemViewType(position);
         if (convertView == null) {
             switch (type) {
-                case TIME_TYPE:
+                case TYPE_TIME:
                     convertView = inflater.inflate(R.layout.item_time_layout, parent, false);
                     timeViewHolder = new TimeViewHolder();
                     timeViewHolder.editText = convertView.findViewById(R.id.time_edit);
                     convertView.setTag(timeViewHolder);
                     break;
-                case MOUKEY_TYPE:
+                case TYPE_MOUSE:
                     convertView = inflater.inflate(R.layout.item_mouse_layout, parent, false);
                     mouseViewHolder = new MouseViewHolder();
                     mouseViewHolder.spinner = convertView.findViewById(R.id.mouse_spinner);
                     convertView.setTag(mouseViewHolder);
                     break;
-                case SPEECH_TYPE:
+                case TYPE_SPEECH:
                     convertView = inflater.inflate(R.layout.item_speech_layout, parent, false);
                     speechViewHolder = new SpeechViewHolder();
                     speechViewHolder.editText = convertView.findViewById(R.id.speech_edit);
                     convertView.setTag(speechViewHolder);
                     break;
-                case TTS_TYPE:
+                case TYPE_TEXT:
                     convertView = inflater.inflate(R.layout.item_text_layout, parent, false);
                     textViewHolder = new TextViewHolder();
                     textViewHolder.textView = convertView.findViewById(R.id.text_content);
@@ -91,16 +106,16 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
             }
         } else {
             switch (type) {
-                case TIME_TYPE:
+                case TYPE_TIME:
                     timeViewHolder = (TimeViewHolder) convertView.getTag();
                     break;
-                case MOUKEY_TYPE:
+                case TYPE_MOUSE:
                     mouseViewHolder = (MouseViewHolder) convertView.getTag();
                     break;
-                case SPEECH_TYPE:
+                case TYPE_SPEECH:
                     speechViewHolder = (SpeechViewHolder) convertView.getTag();
                     break;
-                case TTS_TYPE:
+                case TYPE_TEXT:
                     textViewHolder = (TextViewHolder) convertView.getTag();
                     break;
             }
@@ -108,18 +123,25 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
         ExecuteModule executeModule = getItem(position);
         switch (type) {
-            case TIME_TYPE:
+            case TYPE_TIME:
                 timeViewHolder.editText.setText(executeModule.getTime());
                 break;
-            case MOUKEY_TYPE:
+            case TYPE_MOUSE:
                 mouseViewHolder.spinner.setAdapter(new MouseSpinnerAdapter(mContext, MouseBean.getMouseBeans()));
                 mouseViewHolder.spinner.setSelection(0);
                 break;
-            case SPEECH_TYPE:
+            case TYPE_SPEECH:
                 speechViewHolder.editText.setText(executeModule.getRecognitionText());
                 break;
-            case TTS_TYPE:
-                textViewHolder.textView.setText(executeModule.getTts());
+            case TYPE_TEXT:
+                int itemType = executeModule.getType();
+                if (itemType == TTS_TYPE) {
+                    textViewHolder.textView.setText(executeModule.getTts());
+                } else if (itemType == ACTION_TYPE) {
+                    textViewHolder.textView.setText(executeModule.getAction());
+                } else if (itemType == FACE_TYPE) {
+                    textViewHolder.textView.setText(executeModule.getFace());
+                }
                 break;
         }
 

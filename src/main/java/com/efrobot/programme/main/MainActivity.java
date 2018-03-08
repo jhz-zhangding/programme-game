@@ -12,9 +12,11 @@ import android.widget.RelativeLayout;
 
 import com.efrobot.programme.R;
 import com.efrobot.programme.adapter.AddFaceAndActionAdapter;
+import com.efrobot.programme.adapter.ExecuteItemAdapter;
 import com.efrobot.programme.adapter.ItemContentAdapter;
 import com.efrobot.programme.adapter.MainProjectAdapter;
 import com.efrobot.programme.base.BaseActivity;
+import com.efrobot.programme.bean.ExecuteModule;
 import com.efrobot.programme.bean.FaceAndActionEntity;
 import com.efrobot.programme.bean.MainProject;
 import com.efrobot.programme.bean.TypeBean;
@@ -23,11 +25,17 @@ import com.efrobot.programme.db.DBManager;
 import com.efrobot.programme.dialog.ItemNameDialog;
 import com.efrobot.programme.utils.DiyFaceAndActionUtils;
 import com.efrobot.programme.view.drag.DragListView;
+import com.efrobot.programme.view.onlydrag.OnItemDragUpListener;
+import com.efrobot.programme.view.onlydrag.OnlyDragListView;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.efrobot.programme.env.Constans.ExecuteContent.ACTION_TYPE;
+import static com.efrobot.programme.env.Constans.ExecuteContent.FACE_TYPE;
+import static com.efrobot.programme.env.Constans.ExecuteContent.TTS_TYPE;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
 
@@ -60,16 +68,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private ListView typeListView;
 
-    private ListView ttsListView;
-    private ListView faceListView;
-    private ListView actionListView;
+    private OnlyDragListView ttsListView;
+    private OnlyDragListView faceListView;
+    private OnlyDragListView actionListView;
 
     private String[] types = new String[]{"说话", "动作", "表情"};
     private List<TypeBean> typeBeans;
     private ItemContentAdapter itemContentAdapter;
 
-    private DragListView dragListView;
+    private ExecuteModule tempExecuteMoudule;
+    private ExecuteItemAdapter executeItemAdapter;
+    private List<ExecuteModule> executeModuleList;
 
+    int location[] = new int[2];
+    private int dragListViewInScreenX = 0;
+    private int dragListViewInScreenY = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +93,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         initListener();
         initData();
         setProjectAdapter();
+        dragContentListView.post(new Runnable() {
+            @Override
+            public void run() {
+                dragContentListView.getLocationOnScreen(location);
+                dragListViewInScreenX = location[0];
+                dragListViewInScreenY = location[1];
+            }
+        });
     }
 
     private void init() {
@@ -98,7 +119,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         faceListView = findViewById(R.id.face_list_view);
         actionListView = findViewById(R.id.action_list_view);
 
-        dragListView = findViewById(R.id.content_drag_list_view);
+        dragContentListView = findViewById(R.id.content_drag_list_view);
     }
 
     private void initListener() {
@@ -109,6 +130,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         findViewById(R.id.output_btn).setOnClickListener(this);
         projectListView.setOnItemClickListener(new OnProjectItemOnClick());
         typeListView.setOnItemClickListener(new OnTypeItemOnClick());
+
+        ttsListView.setOnItemDragUpListener(new OnTtsItemDragListener());
+        faceListView.setOnItemDragUpListener(new OnFaceItemDragListener());
+        actionListView.setOnItemDragUpListener(new OnActionItemDragListener());
+
     }
 
     private void initData() {
@@ -135,6 +161,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         showFaceAndAction(1);
         showFaceAndAction(2);
+
+        executeModuleList = new ArrayList<>();
+        executeItemAdapter = new ExecuteItemAdapter(this, executeModuleList);
+        dragContentListView.setAdapter(executeItemAdapter);
     }
 
     private void setProjectAdapter() {
@@ -315,6 +345,65 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (type == 2) {
             actionAdapter.setDataResource(mActionList, 2);
         }
+    }
+
+    /**
+     * 从列表中取出来的数据位置和坐标
+     */
+
+    class OnTriggerItemDragListener implements OnItemDragUpListener {
+
+        @Override
+        public void onViewUpCoordinate(int position, int x, int v) {
+
+        }
+    }
+
+    /**
+     * 左边功能区域拖拽结束后坐标监听
+     */
+    class OnTtsItemDragListener implements OnItemDragUpListener {
+
+        @Override
+        public void onViewUpCoordinate(int position, int x, int y) {
+            tempExecuteMoudule = new ExecuteModule();
+            tempExecuteMoudule.setType(TTS_TYPE);
+            tempExecuteMoudule.setTts(faceAdapter.getItemFromPosition(position).content);
+            addDataOnPosition(tempExecuteMoudule, x, y);
+        }
+    }
+
+    class OnActionItemDragListener implements OnItemDragUpListener {
+
+        @Override
+        public void onViewUpCoordinate(int position, int x, int y) {
+            tempExecuteMoudule = new ExecuteModule();
+            tempExecuteMoudule.setType(ACTION_TYPE);
+            tempExecuteMoudule.setAction(actionAdapter.getItemFromPosition(position).content);
+            addDataOnPosition(tempExecuteMoudule, x, y);
+        }
+    }
+
+    class OnFaceItemDragListener implements OnItemDragUpListener {
+
+        @Override
+        public void onViewUpCoordinate(int position, int x, int y) {
+            tempExecuteMoudule = new ExecuteModule();
+            tempExecuteMoudule.setType(FACE_TYPE);
+            tempExecuteMoudule.setFace(faceAdapter.getItemFromPosition(position).content);
+            addDataOnPosition(tempExecuteMoudule, x, y);
+        }
+    }
+
+    /**
+     * 向执行区域添加View
+     *
+     * @param executeModule
+     * @param x
+     * @param y
+     */
+    private void addDataOnPosition(ExecuteModule executeModule, int x, int y) {
+        dragContentListView.addDataToPosition(executeModule, x - dragListViewInScreenX, y - dragListViewInScreenY);
     }
 
     /**

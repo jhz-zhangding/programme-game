@@ -7,6 +7,7 @@ package com.efrobot.programme.view.onlydrag;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -18,26 +19,27 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import com.efrobot.programme.view.drag.CommonTool;
-import com.efrobot.programme.view.drag.DragListViewAdapter;
 
 /**
  * 可拖拽排序的ListView
  * 特点：
- * 1、可拖拽排序（条目右边1/4空间内）
+ * 1、只有拖拽功能
  * 2、可添加头部控件headerView
- * 3、左滑可删除
  * 4、可设置点击和长按事件
  * <p>
- * Created by Ralap on 2016/5/8.
+ * Created by zd on 2018/3/6.
+ * 改自github上的开源DragListView
  */
 
 public class OnlyDragListView extends ListView {
     @SuppressWarnings("unused")
     private static final String LOG_TAG = OnlyDragListView.class.getSimpleName();
+
+    /**
+     * OnlyDragListView的item长按响应的时间， 默认是1000毫秒，也可以自行设置
+     */
+    private long dragResponseMS = 500;
 
     /**
      * 拖拽快照的透明度(0.0f ~ 1.0f)。进入删除时的状态也取此值
@@ -51,7 +53,9 @@ public class OnlyDragListView extends ListView {
      * @see #getMaxDistance()
      */
     private int mMaxDistance = 30;
+    private View mStartDragItemView;
 
+    private OnItemDragUpListener onItemDragUpListener;
 
     public OnlyDragListView(Context context) {
         super(context);
@@ -139,11 +143,6 @@ public class OnlyDragListView extends ListView {
     private boolean mIsScrolling;
 
     /**
-     * 长按后，执行了长按事件的标记
-     */
-    private boolean mLongClickFlag;
-
-    /**
      * 条目长按监听器
      */
     private OnItemLongClickListener mDeletingItemLongClickListener;
@@ -164,14 +163,41 @@ public class OnlyDragListView extends ListView {
     @SuppressWarnings("unused")
     private int mFooterHeightSum = 0;
 
+    private Handler mHandler = new Handler();
+
+    //用来处理是否为长按的Runnable
+    private Runnable mLongClickRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            mIsDraging = true;
+            startDrag();
+        }
+    };
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         // 获取第一个手指点的Action
         int action = ev.getAction() & MotionEvent.ACTION_MASK;
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+
+                mDownX = (int) ev.getX();
+                mDownY = (int) ev.getY();
+                mDragPosition = pointToPosition(mDownX, mDownY);
+                //根据position获取该item所对应的View
+
+                if (!isPositionValid(mDragPosition)) {
+                    return super.onTouchEvent(ev);
+                }
+
+                mStartDragItemView = getItemView(mDragPosition);
+
                 // 初始化操作
-                setOnItemLongClickListener(mDeletingItemLongClickListener);
+                //使用Handler延迟dragResponseMS执行mLongClickRunnable
+                mHandler.postDelayed(mLongClickRunnable, dragResponseMS);
+
+//                setOnItemLongClickListener(mDeletingItemLongClickListener);
                 if (mVelocityTracker == null) {
                     mVelocityTracker = VelocityTracker.obtain();
                 } else {
@@ -179,44 +205,75 @@ public class OnlyDragListView extends ListView {
                 }
                 mVelocityTracker.addMovement(ev);
 
-                mDownX = (int) ev.getX();
-                mDownY = (int) ev.getY();
                 // 获取当前触摸位置对应的条目索引
-                mDragPosition = pointToPosition(mDownX, mDownY);
-                // 如果触摸的坐标不在条目上，在分割线、或外部区域，则为无效值-1; 宽度3/4 以右的区域可拖拽; Header和Footer无效
-                if (!isPositionValid(mDragPosition)) {
-                    return super.onTouchEvent(ev);
-                }
-                mIsDraging = true;
                 mRawOffsetX = (int) (ev.getRawX() - mDownX);
                 mRawOffsetY = (int) (ev.getRawY() - mDownY);
-                // 开始拖拽的前期工作：展示item快照
-                startDrag();
                 break;
             case MotionEvent.ACTION_MOVE:
-                mVelocityTracker.addMovement(ev);
 
-                mMoveX = (int) ev.getX();
-                mMoveY = (int) ev.getY();
+                int moveX = (int) ev.getX();
+                int moveY = (int) ev.getY();
+
+                //如果我们在按下的item上面移动，只要不超过item的边界我们就不移除mRunnable
+                if (!isTouchInItem(mStartDragItemView, moveX, moveY)) {
+                    mHandler.removeCallbacks(mLongClickRunnable);
+                }
+
                 if (mIsDraging) {
+                    mMoveX = moveX;
+                    mMoveY = moveY;
+                    mVelocityTracker.addMovement(ev);
                     // 更新快照位置
                     updateDragView();
                     // 更新当前被替换的位置
+                } else {
+                    return super.onTouchEvent(ev);
                 }
 
                 break;
             case MotionEvent.ACTION_UP:
-                rstLongClickFlag();
-
                 if (mIsDraging) {
                     // 停止拖拽
                     stopDrag();
+                    //停止拖拽后的位置接口
+                    int x = (int) ev.getRawX();
+                    int y = (int) ev.getRawY();
+                    if (onItemDragUpListener != null) {
+                        onItemDragUpListener.onViewUpCoordinate(mDragPosition, x, y);
+                    }
+                } else {
+                    return super.onTouchEvent(ev);
                 }
                 recycleVelocityTracker();
                 break;
             default:
                 break;
         }
+        return true;
+    }
+
+    /**
+     * 是否点击在ListVIew的item上面
+     *
+     * @param dragView
+     * @param x
+     * @param y
+     * @return
+     */
+    private boolean isTouchInItem(View dragView, int x, int y) {
+        if (dragView == null) {
+            return false;
+        }
+        int leftOffset = dragView.getLeft();
+        int topOffset = dragView.getTop();
+        if (x < leftOffset || x > leftOffset + dragView.getWidth()) {
+            return false;
+        }
+
+        if (y < topOffset || y > topOffset + dragView.getHeight()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -240,7 +297,7 @@ public class OnlyDragListView extends ListView {
 
     private boolean startDrag() {
         // 实际在ListView中的位置，因为涉及到条目的复用
-        final View itemView = getItemView(mDragPosition);
+        final View itemView = mStartDragItemView;
         if (itemView == null) {
             return false;
         }
@@ -252,25 +309,25 @@ public class OnlyDragListView extends ListView {
         itemView.setDrawingCacheEnabled(false);
 
         // 隐藏。为了防止隐藏时出现画面闪烁，使用动画去除闪烁效果
-        Animation aAnim = new AlphaAnimation(1f, DRAG_PHOTO_VIEW_ALPHA);
-        aAnim.setDuration(50);
-        aAnim.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                if (mIsDraging) {
-                    itemView.setVisibility(View.INVISIBLE);
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-        itemView.startAnimation(aAnim);
+//        Animation aAnim = new AlphaAnimation(1f, DRAG_PHOTO_VIEW_ALPHA);
+//        aAnim.setDuration(50);
+//        aAnim.setAnimationListener(new Animation.AnimationListener() {
+//            @Override
+//            public void onAnimationStart(Animation animation) {
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animation animation) {
+//                if (mIsDraging) {
+//                    itemView.setVisibility(View.INVISIBLE);
+//                }
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animation animation) {
+//            }
+//        });
+//        itemView.startAnimation(aAnim);
 
         mItemOffsetX = mDownX - itemView.getLeft();
         mItemOffsetY = mDownY - itemView.getTop();
@@ -335,6 +392,7 @@ public class OnlyDragListView extends ListView {
     private void updateDragView() {
         if (mDragPhotoView != null) {
             Log.e("createDragPhotoView", "mDownY=" + mDownY + "//mRawOffsetY=" + mRawOffsetY + "//mItemOffsetY=" + mItemOffsetY);
+            mWindowLayoutParams.x = mMoveX + mRawOffsetX - mItemOffsetX;
             mWindowLayoutParams.y = mMoveY + mRawOffsetY - mItemOffsetY;
             Log.e("createDragPhotoView", "mWindowLayoutParams.y=" + mWindowLayoutParams.y);
             mWindowManager.updateViewLayout(mDragPhotoView, mWindowLayoutParams);
@@ -346,10 +404,10 @@ public class OnlyDragListView extends ListView {
      */
     private void stopDrag() {
         // 显示坐标上的条目
-        View view = getItemView(mDragPosition);
-        if (view != null) {
-            view.setVisibility(View.VISIBLE);
-        }
+//        View view = getItemView(mDragPosition);
+//        if (view != null) {
+//            view.setVisibility(View.VISIBLE);
+//        }
         // 移除快照
         if (mDragPhotoView != null) {
             mWindowManager.removeView(mDragPhotoView);
@@ -368,21 +426,6 @@ public class OnlyDragListView extends ListView {
             this.mDeletingItemLongClickListener = listener;
         }
     }
-
-    /**
-     * 置位长按事件执行标记
-     */
-    public void setLongClickFlag() {
-        this.mLongClickFlag = true;
-    }
-
-    /**
-     * 复位长按事件执行标记
-     */
-    public void rstLongClickFlag() {
-        this.mLongClickFlag = false;
-    }
-
 
     /**
      * 为了获取头部高度
@@ -416,5 +459,9 @@ public class OnlyDragListView extends ListView {
     @SuppressWarnings("unused")
     public int getMaxDistance() {
         return mMaxDistance;
+    }
+
+    public void setOnItemDragUpListener(OnItemDragUpListener onItemDragUpListener) {
+        this.onItemDragUpListener = onItemDragUpListener;
     }
 }

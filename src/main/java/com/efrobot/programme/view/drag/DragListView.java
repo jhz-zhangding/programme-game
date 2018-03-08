@@ -22,6 +22,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Scroller;
 
+import com.efrobot.programme.bean.ExecuteModule;
+
 /**
  * 可拖拽排序的ListView
  * 特点：
@@ -252,7 +254,8 @@ public class DragListView extends ListView {
                 // 获取当前触摸位置对应的条目索引
                 mDragPosition = pointToPosition(mDownX, mDownY);
                 // 如果触摸的坐标不在条目上，在分割线、或外部区域，则为无效值-1; 宽度3/4 以右的区域可拖拽; Header和Footer无效
-                if (!isPositionValid(mDragPosition) || mDownX < getWidth() * 3 / 4) {
+//                if (!isPositionValid(mDragPosition) || mDownX < getWidth() * 3 / 4) {
+                if (!isPositionValid(mDragPosition) || mDownX < getWidth() * 1 / 2) {
                     return super.onTouchEvent(ev);
                 }
                 mIsDraging = true;
@@ -534,6 +537,16 @@ public class DragListView extends ListView {
             mWindowLayoutParams.y = adjustDragY(mMoveY + mRawOffsetY - mItemOffsetY);
             Log.e("createDragPhotoView", "mWindowLayoutParams.y=" + mWindowLayoutParams.y);
             mWindowManager.updateViewLayout(mDragPhotoView, mWindowLayoutParams);
+        }
+    }
+
+    public void addDataToPosition(ExecuteModule executeModule, int x, int y) {
+        int theX = x;
+        int theY = y;
+        if (theX > 0 && theY > 0) {
+            int position = pointToPosition(theX, theY);
+            position = position < 0 ? mAdapter.getCount() : position;
+            mAdapter.addData(position, executeModule);
         }
     }
 

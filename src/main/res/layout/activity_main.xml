@@ -214,12 +214,16 @@
         android:layout_below="@+id/title_layout"
         android:layout_marginTop="20dp"
         android:layout_toRightOf="@+id/right_relat"
-        android:gravity="center">
+        android:gravity="center_horizontal"
+        >
 
         <com.efrobot.programme.view.drag.DragListView
             android:id="@+id/content_drag_list_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:dividerHeight="0dp"
+            android:divider="@null"
+            />
 
 
     </RelativeLayout>
