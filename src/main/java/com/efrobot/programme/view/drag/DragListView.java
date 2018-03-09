@@ -211,7 +211,7 @@ public class DragListView extends ListView {
     /**
      * 速度追踪器
      */
-    private VelocityTracker mVelocityTracker;
+    private VelocityTracker mVelocityTracker = VelocityTracker.obtain();
 
     /**
      * 滑动器
@@ -268,7 +268,9 @@ public class DragListView extends ListView {
                 startDrag();
                 break;
             case MotionEvent.ACTION_MOVE:
-                mVelocityTracker.addMovement(ev);
+                if (mVelocityTracker != null) {
+                    mVelocityTracker.addMovement(ev);
+                }
 
                 mMoveX = (int) ev.getX();
                 mMoveY = (int) ev.getY();
@@ -555,6 +557,7 @@ public class DragListView extends ListView {
         if (isPositionValid(position)) {
             mToPosition = position;
         }
+        Log.e("DragListVIew", "mFromPosition = " + mFromPosition + "   mToPosition = " + mToPosition);
 
         // 调换位置，并把显示进行调换
         if (mFromPosition != mToPosition) {

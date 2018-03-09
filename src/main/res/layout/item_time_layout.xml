@@ -24,7 +24,9 @@
             android:id="@+id/time_edit"
             android:layout_width="@dimen/size_100dp"
             android:layout_height="45dp"
-            android:layout_marginLeft="15dp" />
+            android:layout_marginLeft="15dp"
+            android:focusable="false"
+            />
 
 
     </LinearLayout>

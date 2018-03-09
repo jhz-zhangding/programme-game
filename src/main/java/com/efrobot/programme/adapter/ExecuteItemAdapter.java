@@ -8,11 +8,15 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bigkoo.pickerview.TimePickerView;
 import com.efrobot.programme.R;
 import com.efrobot.programme.bean.ExecuteModule;
 import com.efrobot.programme.bean.MouseBean;
 import com.efrobot.programme.view.drag.DragListViewAdapter;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static com.efrobot.programme.env.Constans.ExecuteContent.ACTION_TYPE;
@@ -31,7 +35,7 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
     private LayoutInflater inflater;
 
-    private List<MouseBean> mouseBeanList;
+    private int mType = 0;
 
     private final int TYPE_TIME = 0;
     private final int TYPE_MOUSE = 1;
@@ -41,6 +45,10 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
     public ExecuteItemAdapter(Context context, List<ExecuteModule> dataList) {
         super(context, dataList);
         inflater = LayoutInflater.from(context);
+    }
+
+    public void setmType(int mType) {
+        this.mType = mType;
     }
 
     @Override
@@ -83,6 +91,13 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                     convertView = inflater.inflate(R.layout.item_time_layout, parent, false);
                     timeViewHolder = new TimeViewHolder();
                     timeViewHolder.editText = convertView.findViewById(R.id.time_edit);
+                    timeViewHolder.editText.setFocusable(false);
+                    timeViewHolder.editText.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            showTimePickerVIew(view);
+                        }
+                    });
                     convertView.setTag(timeViewHolder);
                     break;
                 case TYPE_MOUSE:
@@ -119,6 +134,12 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                     textViewHolder = (TextViewHolder) convertView.getTag();
                     break;
             }
+        }
+
+        if (type == 0) {
+
+        } else if (type == 1) {
+
         }
 
         ExecuteModule executeModule = getItem(position);
@@ -162,6 +183,23 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
     class TextViewHolder {
         TextView textView;
+    }
+
+    private void showTimePickerVIew(final View tvTime) {
+        //时间选择器
+        TimePickerView pvTime = new TimePickerView.Builder(mContext, new TimePickerView.OnTimeSelectListener() {
+            @Override
+            public void onTimeSelect(Date date, View v) {//选中事件回调
+                ((TextView) tvTime).setText(getTime(date));
+            }
+        }).build();
+        pvTime.setDate(Calendar.getInstance());//注：根据需求来决定是否使用该方法（一般是精确到秒的情况），此项可以在弹出选择器的时候重新设置当前时间，避免在初始化之后由于时间已经设定，导致选中时间与当前时间不匹配的问题。
+        pvTime.show();
+    }
+
+    private String getTime(Date date) {//可根据需要自行截取数据显示
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return format.format(date);
     }
 
 }

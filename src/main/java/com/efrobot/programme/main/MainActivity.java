@@ -10,11 +10,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 
+import com.bigkoo.pickerview.TimePickerView;
 import com.efrobot.programme.R;
 import com.efrobot.programme.adapter.AddFaceAndActionAdapter;
 import com.efrobot.programme.adapter.ExecuteItemAdapter;
 import com.efrobot.programme.adapter.ItemContentAdapter;
 import com.efrobot.programme.adapter.MainProjectAdapter;
+import com.efrobot.programme.adapter.TtsContentAdapter;
 import com.efrobot.programme.base.BaseActivity;
 import com.efrobot.programme.bean.ExecuteModule;
 import com.efrobot.programme.bean.FaceAndActionEntity;
@@ -23,6 +25,7 @@ import com.efrobot.programme.bean.TypeBean;
 import com.efrobot.programme.dao.DataManager;
 import com.efrobot.programme.db.DBManager;
 import com.efrobot.programme.dialog.ItemNameDialog;
+import com.efrobot.programme.env.DataUtils;
 import com.efrobot.programme.utils.DiyFaceAndActionUtils;
 import com.efrobot.programme.view.drag.DragListView;
 import com.efrobot.programme.view.onlydrag.OnItemDragUpListener;
@@ -30,6 +33,8 @@ import com.efrobot.programme.view.onlydrag.OnlyDragListView;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,7 +53,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     //内容
     private DragListView dragContentListView;
-//    private
 
     private DBManager dbManager;
 
@@ -56,20 +60,28 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private RelativeLayout typeIncludeRl;
 
+    //输出分类
+    private ExecuteItemAdapter triggerItemAdapter;
+    private OnlyDragListView triggerListView;
+    private List<ExecuteModule> triggerBeanList;
+
     private View triggerLayout, menuLayout, ttsLayout, actionLayout, faceLayout;
 
-    //输出分类
-    private List<String> triggerList = new ArrayList<>();
-
-
+    //动作、表情
     private HashMap<String, String> mFaceList;
     private HashMap<String, String> mActionList;
     private int type = 1;
 
+    //输出列表
     private ListView typeListView;
 
+    //说话
     private OnlyDragListView ttsListView;
+    private TtsContentAdapter ttsContentAdapter;
+    private List<String> stringList;
+    //表情
     private OnlyDragListView faceListView;
+    //动作
     private OnlyDragListView actionListView;
 
     private String[] types = new String[]{"说话", "动作", "表情"};
@@ -107,6 +119,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         dbManager = new DBManager(this);
         projectListView = findViewById(R.id.main_item_listview);
 
+        triggerListView = findViewById(R.id.trigger_condition_list_view);
         triggerLayout = findViewById(R.id.chufa_condition_layout);
         menuLayout = findViewById(R.id.menu_include_layout);
         ttsLayout = findViewById(R.id.tts_condition_layout);
@@ -131,6 +144,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         projectListView.setOnItemClickListener(new OnProjectItemOnClick());
         typeListView.setOnItemClickListener(new OnTypeItemOnClick());
 
+        triggerListView.setOnItemDragUpListener(new OnTriggerItemDragListener());
         ttsListView.setOnItemDragUpListener(new OnTtsItemDragListener());
         faceListView.setOnItemDragUpListener(new OnFaceItemDragListener());
         actionListView.setOnItemDragUpListener(new OnActionItemDragListener());
@@ -138,6 +152,16 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     private void initData() {
+        /**
+         * Tts
+         */
+        stringList = DataUtils.getTtsList();
+        ttsContentAdapter = new TtsContentAdapter(stringList);
+        ttsListView.setAdapter(ttsContentAdapter);
+
+        /**
+         * 动作和表情数据
+         */
         mFaceList = new DiyFaceAndActionUtils(this).readFaceData();
         mActionList = new HashMap<>();
         final List<FaceAndActionEntity> list = DataManager.getInstance(getContext()).queryAllAction();
@@ -149,6 +173,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
         }
 
+        showFaceAndAction(1);
+        showFaceAndAction(2);
+
+        /**
+         * 输出类型数据
+         */
         typeBeans = new ArrayList<>();
         for (int i = 0; i < types.length; i++) {
             TypeBean typeBean = new TypeBean();
@@ -159,14 +189,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         itemContentAdapter = new ItemContentAdapter(typeBeans);
         typeListView.setAdapter(itemContentAdapter);
 
-        showFaceAndAction(1);
-        showFaceAndAction(2);
-
-        executeModuleList = new ArrayList<>();
+        /**
+         * 可执行Item数据
+         */
+        executeModuleList = DataUtils.getExecuteData(this);
         executeItemAdapter = new ExecuteItemAdapter(this, executeModuleList);
         dragContentListView.setAdapter(executeItemAdapter);
+
+        /**
+         * 触发类型数据
+         */
+        triggerBeanList = DataUtils.getTiggerData();
+        triggerItemAdapter = new ExecuteItemAdapter(this, triggerBeanList);
+        triggerListView.setAdapter(triggerItemAdapter);
     }
 
+    /**
+     * 项目数据
+     */
     private void setProjectAdapter() {
         projectList = dbManager.queryProjectItem();
         if (mainProjectAdapter == null) {
@@ -292,6 +332,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mItemNameDialog.show();
     }
 
+    /**
+     * 添加项目
+     *
+     * @param sceneName
+     */
     public void addScene(String sceneName) {
         if (!TextUtils.isEmpty(sceneName)) {
             try {
@@ -354,8 +399,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     class OnTriggerItemDragListener implements OnItemDragUpListener {
 
         @Override
-        public void onViewUpCoordinate(int position, int x, int v) {
-
+        public void onViewUpCoordinate(int position, int x, int y) {
+            tempExecuteMoudule = triggerBeanList.get(position);
+            addDataOnPosition(tempExecuteMoudule, x, y);
         }
     }
 
@@ -368,7 +414,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         public void onViewUpCoordinate(int position, int x, int y) {
             tempExecuteMoudule = new ExecuteModule();
             tempExecuteMoudule.setType(TTS_TYPE);
-            tempExecuteMoudule.setTts(faceAdapter.getItemFromPosition(position).content);
+            tempExecuteMoudule.setTts(stringList.get(position));
             addDataOnPosition(tempExecuteMoudule, x, y);
         }
     }
@@ -412,4 +458,5 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private void addItem() {
 
     }
+
 }

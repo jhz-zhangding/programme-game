@@ -15,7 +15,7 @@ public class MouseBean {
 
     private int image;
 
-    private static int[] mouseImage = new int[]{};
+    private static int[] mouseImage = new int[]{1, 21, 12, 5441};
 
     public static List<MouseBean> getMouseBeans() {
         List<MouseBean> mouseBeans = new ArrayList<>();
