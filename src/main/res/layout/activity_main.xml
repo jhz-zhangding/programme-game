@@ -18,6 +18,18 @@
             android:textColor="@color/white"
             android:textSize="26sp" />
 
+        <TextView
+            android:id="@+id/run_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="运行"
+            android:textSize="20sp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="30dp"
+            android:background="@drawable/button_bg"
+            />
+
     </RelativeLayout>
 
     <View

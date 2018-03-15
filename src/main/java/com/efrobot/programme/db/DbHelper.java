@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import com.efrobot.programme.bean.ExecuteModule;
 import com.efrobot.programme.bean.FaceAndActionEntity;
 import com.efrobot.programme.bean.MainProject;
+import com.efrobot.programme.bean.RouteAction;
+import com.efrobot.programme.bean.RoutePoint;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -44,6 +46,9 @@ public class DbHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, FaceAndActionEntity.class);
             TableUtils.createTable(connectionSource, MainProject.class);
             TableUtils.createTable(connectionSource, ExecuteModule.class);
+
+            TableUtils.createTable(connectionSource, RouteAction.class);
+            TableUtils.createTable(connectionSource, RoutePoint.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }

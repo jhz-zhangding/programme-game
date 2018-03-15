@@ -1,6 +1,8 @@
 package com.efrobot.programme.adapter;
 
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,8 @@ import com.bigkoo.pickerview.TimePickerView;
 import com.efrobot.programme.R;
 import com.efrobot.programme.bean.ExecuteModule;
 import com.efrobot.programme.bean.MouseBean;
+import com.efrobot.programme.db.DBManager;
+import com.efrobot.programme.utils.DiyFaceAndActionUtils;
 import com.efrobot.programme.view.drag.DragListViewAdapter;
 
 import java.text.SimpleDateFormat;
@@ -25,6 +29,7 @@ import static com.efrobot.programme.env.Constans.ExecuteContent.MOUSE_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.SPEECH_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.TIME_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.TOTAL_VIEW_COUNT;
+import static com.efrobot.programme.env.Constans.ExecuteContent.TTS_INPUT_TYPE;
 import static com.efrobot.programme.env.Constans.ExecuteContent.TTS_TYPE;
 
 /**
@@ -41,10 +46,14 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
     private final int TYPE_MOUSE = 1;
     private final int TYPE_SPEECH = 2;
     private final int TYPE_TEXT = 3;
+    private final int TYPE_INPUT_TEXT = 4;
+
+    private DiyFaceAndActionUtils utils;
 
     public ExecuteItemAdapter(Context context, List<ExecuteModule> dataList) {
         super(context, dataList);
         inflater = LayoutInflater.from(context);
+        utils = new DiyFaceAndActionUtils(context);
     }
 
     public void setmType(int mType) {
@@ -68,6 +77,8 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                 return TYPE_TEXT;
             case FACE_TYPE:
                 return TYPE_TEXT;
+            case TTS_INPUT_TYPE:
+                return TYPE_INPUT_TEXT;
         }
         return type;
     }
@@ -83,6 +94,7 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
         MouseViewHolder mouseViewHolder = null;
         SpeechViewHolder speechViewHolder = null;
         TextViewHolder textViewHolder = null;
+        InputTextViewHolder inputTextViewHolder = null;
 
         int type = getItemViewType(position);
         if (convertView == null) {
@@ -118,6 +130,12 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                     textViewHolder.textView = convertView.findViewById(R.id.text_content);
                     convertView.setTag(textViewHolder);
                     break;
+                case TYPE_INPUT_TEXT:
+                    convertView = inflater.inflate(R.layout.item_edit_text_input_layout, parent, false);
+                    inputTextViewHolder = new InputTextViewHolder();
+                    inputTextViewHolder.editText = convertView.findViewById(R.id.tts_edit);
+                    convertView.setTag(inputTextViewHolder);
+                    break;
             }
         } else {
             switch (type) {
@@ -133,6 +151,9 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                 case TYPE_TEXT:
                     textViewHolder = (TextViewHolder) convertView.getTag();
                     break;
+                case TYPE_INPUT_TEXT:
+                    inputTextViewHolder = (InputTextViewHolder) convertView.getTag();
+                    break;
             }
         }
 
@@ -142,7 +163,7 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
         }
 
-        ExecuteModule executeModule = getItem(position);
+        final ExecuteModule executeModule = getItem(position);
         switch (type) {
             case TYPE_TIME:
                 timeViewHolder.editText.setText(executeModule.getTime());
@@ -159,10 +180,30 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
                 if (itemType == TTS_TYPE) {
                     textViewHolder.textView.setText(executeModule.getTts());
                 } else if (itemType == ACTION_TYPE) {
-                    textViewHolder.textView.setText(executeModule.getAction());
+                    textViewHolder.textView.setText(utils.contrastAction(executeModule.getAction()));
                 } else if (itemType == FACE_TYPE) {
-                    textViewHolder.textView.setText(executeModule.getFace());
+                    textViewHolder.textView.setText(utils.contrastFace(executeModule.getFace()));
                 }
+                break;
+            case TYPE_INPUT_TEXT:
+                inputTextViewHolder.editText.setText(executeModule.getTts());
+                inputTextViewHolder.editText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+                        executeModule.setTts(editable.toString());
+                        new DBManager(mContext).updateExcuteItem(executeModule);
+                    }
+                });
                 break;
         }
 
@@ -183,6 +224,10 @@ public class ExecuteItemAdapter extends DragListViewAdapter<ExecuteModule> {
 
     class TextViewHolder {
         TextView textView;
+    }
+
+    class InputTextViewHolder {
+        EditText editText;
     }
 
     private void showTimePickerVIew(final View tvTime) {

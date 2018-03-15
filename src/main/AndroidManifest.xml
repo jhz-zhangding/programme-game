@@ -10,12 +10,36 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name="com.efrobot.programme.main.MainActivity">
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+
+        <activity android:name="com.efrobot.programme.main.RouteCtrolActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".service.ActionService"
+            android:enabled="true"
+            android:exported="true" />
+
+
+        <service
+            android:name=".service.ProgrammeGameService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <provider
+            android:name=".provider.ProgrammeProvider"
+            android:authorities="com.efrobot.programme.speechSdkProvider"
+            android:exported="true" />
     </application>
 
 </manifest>

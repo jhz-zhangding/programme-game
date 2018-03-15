@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#dfdfdf">
+
+    <LinearLayout
+        android:id="@+id/left_layout"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:text="动作："
+            android:textColor="@color/black"
+            android:textSize="36sp" />
+
+        <TextView
+            android:id="@+id/go_front"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:padding="15dp"
+            android:gravity="center"
+            android:textSize="20dp"
+            android:textColor="@color/c3"
+            android:background="@drawable/button_bg"
+            android:text="前进一格" />
+
+        <TextView
+            android:id="@+id/go_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:padding="15dp"
+            android:textSize="20dp"
+            android:textColor="@color/c3"
+            android:background="@drawable/button_bg"
+            android:text="后退一格" />
+
+        <TextView
+            android:id="@+id/turn_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:padding="15dp"
+            android:textSize="20dp"
+            android:textColor="@color/c3"
+            android:background="@drawable/button_bg"
+            android:text="左转90°" />
+
+        <TextView
+            android:id="@+id/turn_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:padding="15dp"
+            android:textSize="20dp"
+            android:textColor="@color/c3"
+            android:background="@drawable/button_bg"
+            android:text="右转90°" />
+
+        <TextView
+            android:id="@+id/revoke_view"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="30dp"
+            android:background="#269fd6"
+            android:gravity="center"
+            android:text="撤销一步"
+            android:textColor="@color/c3"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/reset_view"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="30dp"
+            android:background="#269fd6"
+            android:gravity="center"
+            android:text="重做"
+            android:textColor="@color/c3"
+            android:textSize="22sp" />
+
+        <com.efrobot.programme.view.CircleTextView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:text="Star"
+            android:textColor="@color/white"
+            android:textSize="36sp" />
+
+    </LinearLayout>
+
+    <com.efrobot.programme.view.RouteView
+        android:id="@+id/route_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_toRightOf="@+id/left_layout" />
+
+</RelativeLayout>

@@ -15,14 +15,19 @@ import java.util.List;
 /**
  * Created by Ralap on 2016/5/10.
  */
-public abstract class DragListViewAdapter<T> extends BaseAdapter{
+public abstract class DragListViewAdapter<T> extends BaseAdapter {
 
     protected Context mContext;
     protected List<T> mDragDatas;
 
-    public DragListViewAdapter(Context context, List<T> dataList){
+    public DragListViewAdapter(Context context, List<T> dataList) {
         this.mContext = context;
         this.mDragDatas = dataList;
+    }
+
+    public void updateAdapteData(List<T> dataList) {
+        this.mDragDatas = dataList;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -47,7 +52,7 @@ public abstract class DragListViewAdapter<T> extends BaseAdapter{
 
     public abstract View getItemView(int position, View convertView, ViewGroup parent);
 
-    public void swapData(int from, int to){
+    public void swapData(int from, int to) {
         Collections.swap(mDragDatas, from, to);
         notifyDataSetChanged();
     }
@@ -67,7 +72,7 @@ public abstract class DragListViewAdapter<T> extends BaseAdapter{
         notifyDataSetChanged();
     }
 
-    public List<T> getDataList(){
+    public List<T> getDataList() {
         return mDragDatas;
     }
 }

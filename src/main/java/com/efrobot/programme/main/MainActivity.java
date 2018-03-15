@@ -1,5 +1,9 @@
 package com.efrobot.programme.main;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,8 +13,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
-import com.bigkoo.pickerview.TimePickerView;
 import com.efrobot.programme.R;
 import com.efrobot.programme.adapter.AddFaceAndActionAdapter;
 import com.efrobot.programme.adapter.ExecuteItemAdapter;
@@ -26,15 +30,15 @@ import com.efrobot.programme.dao.DataManager;
 import com.efrobot.programme.db.DBManager;
 import com.efrobot.programme.dialog.ItemNameDialog;
 import com.efrobot.programme.env.DataUtils;
+import com.efrobot.programme.service.ProgrammeGameService;
 import com.efrobot.programme.utils.DiyFaceAndActionUtils;
+import com.efrobot.programme.utils.PreferencesUtils;
 import com.efrobot.programme.view.drag.DragListView;
 import com.efrobot.programme.view.onlydrag.OnItemDragUpListener;
 import com.efrobot.programme.view.onlydrag.OnlyDragListView;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -95,16 +99,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     int location[] = new int[2];
     private int dragListViewInScreenX = 0;
     private int dragListViewInScreenY = 0;
+    private boolean isNeedStartService;
+
+    private int currentSelectId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        currentSelectId = PreferencesUtils.getInt(this, "currentSelectId", -1);
+
         init();
         initListener();
-        initData();
         setProjectAdapter();
+        initData();
         dragContentListView.post(new Runnable() {
             @Override
             public void run() {
@@ -141,6 +150,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         findViewById(R.id.trigger_btn).setOnClickListener(this);
         findViewById(R.id.output_btn).setOnClickListener(this);
+        findViewById(R.id.run_btn).setOnClickListener(this);
         projectListView.setOnItemClickListener(new OnProjectItemOnClick());
         typeListView.setOnItemClickListener(new OnTypeItemOnClick());
 
@@ -149,6 +159,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         faceListView.setOnItemDragUpListener(new OnFaceItemDragListener());
         actionListView.setOnItemDragUpListener(new OnActionItemDragListener());
 
+        registerMaskStateReceiver();
     }
 
     private void initData() {
@@ -156,7 +167,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
          * Tts
          */
         stringList = DataUtils.getTtsList();
-        ttsContentAdapter = new TtsContentAdapter(stringList);
+        ttsContentAdapter = new TtsContentAdapter(MainActivity.this, stringList);
         ttsListView.setAdapter(ttsContentAdapter);
 
         /**
@@ -192,7 +203,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         /**
          * 可执行Item数据
          */
-        executeModuleList = DataUtils.getExecuteData(this);
+        executeModuleList = dbManager.queryExecuteById(currentSelectId);
         executeItemAdapter = new ExecuteItemAdapter(this, executeModuleList);
         dragContentListView.setAdapter(executeItemAdapter);
 
@@ -209,13 +220,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
      */
     private void setProjectAdapter() {
         projectList = dbManager.queryProjectItem();
+        if (projectList == null || projectList.size() == 0) {
+            currentSelectId = -1;
+        }
         if (mainProjectAdapter == null) {
             mainProjectAdapter = new MainProjectAdapter(projectList);
+            mainProjectAdapter.setSelectPosition(currentSelectId);
             mainProjectAdapter.setOnItemDeleteListener(new MainProjectAdapter.OnItemDeleteListener() {
                 @Override
                 public void onDelete(int projectId) {
                     //需要删除项目下的所有内容
-
+                    dbManager.deleteMoreExecuteItems(dbManager.queryExecuteById(projectId));
+                    updateExecuteData();
                 }
             });
             projectListView.setAdapter(mainProjectAdapter);
@@ -229,7 +245,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             //切换项目
-            mainProjectAdapter.setSelectPosition(i);
+            currentSelectId = projectList.get(i).getId();
+            mainProjectAdapter.setSelectPosition(currentSelectId);
+
+            updateExecuteData();
+        }
+    }
+
+    private void updateExecuteData() {
+        executeModuleList = dbManager.queryExecuteById(currentSelectId);
+        if (executeItemAdapter != null) {
+            executeItemAdapter.updateAdapteData(executeModuleList);
         }
     }
 
@@ -267,8 +293,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             switch (msg.what) {
                 case UPDATE_PROJECT_MESSAGE:
                     setProjectAdapter();
-                    projectListView.setSelection(projectList.size());
-                    mainProjectAdapter.setSelectPosition(projectList.size() - 1);
+                    currentSelectId = projectList.get(projectList.size() - 1).getId();
+                    mainProjectAdapter.setSelectPosition(currentSelectId);
+
+                    updateExecuteData();
                     break;
             }
         }
@@ -301,6 +329,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 //输出
                 typeIncludeRl.setVisibility(View.VISIBLE);
                 showView(menuLayout);
+                break;
+            case R.id.run_btn:
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //重新排序
+                        dbManager.deleteMoreExecuteItems(executeModuleList);
+                        for (int i = 0; i < executeModuleList.size(); i++) {
+                            dbManager.insertExcuteItem(executeModuleList
+                                    .get(i));
+                        }
+                        Intent intentService = new Intent(MainActivity.this, ProgrammeGameService.class);
+                        startService(intentService);
+                    }
+                });
                 break;
         }
     }
@@ -393,7 +436,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     /**
-     * 从列表中取出来的数据位置和坐标
+     * 从触发列表中取出来的数据位置和坐标
      */
 
     class OnTriggerItemDragListener implements OnItemDragUpListener {
@@ -413,8 +456,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         @Override
         public void onViewUpCoordinate(int position, int x, int y) {
             tempExecuteMoudule = new ExecuteModule();
-            tempExecuteMoudule.setType(TTS_TYPE);
-            tempExecuteMoudule.setTts(stringList.get(position));
+//            if (position == 0) {
+//                tempExecuteMoudule.setType(TTS_INPUT_TYPE);
+//                tempExecuteMoudule.setTts("");
+//            } else
+            {
+                tempExecuteMoudule.setType(TTS_TYPE);
+                tempExecuteMoudule.setTts(stringList.get(position));
+            }
             addDataOnPosition(tempExecuteMoudule, x, y);
         }
     }
@@ -425,7 +474,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         public void onViewUpCoordinate(int position, int x, int y) {
             tempExecuteMoudule = new ExecuteModule();
             tempExecuteMoudule.setType(ACTION_TYPE);
-            tempExecuteMoudule.setAction(actionAdapter.getItemFromPosition(position).content);
+            tempExecuteMoudule.setAction(actionAdapter.getItemFromPosition(position).index);
             addDataOnPosition(tempExecuteMoudule, x, y);
         }
     }
@@ -436,7 +485,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         public void onViewUpCoordinate(int position, int x, int y) {
             tempExecuteMoudule = new ExecuteModule();
             tempExecuteMoudule.setType(FACE_TYPE);
-            tempExecuteMoudule.setFace(faceAdapter.getItemFromPosition(position).content);
+            tempExecuteMoudule.setFace(faceAdapter.getItemFromPosition(position).index);
             addDataOnPosition(tempExecuteMoudule, x, y);
         }
     }
@@ -449,14 +498,77 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
      * @param y
      */
     private void addDataOnPosition(ExecuteModule executeModule, int x, int y) {
+        executeModule.setModuleId(currentSelectId);
+        if (currentSelectId == -1) {
+            Toast.makeText(this, "项目为空", Toast.LENGTH_SHORT).show();
+            return;
+        }
         dragContentListView.addDataToPosition(executeModule, x - dragListViewInScreenX, y - dragListViewInScreenY);
+        dbManager.insertExcuteItem(executeModule);
     }
 
-    /**
-     * 添加item 需要支持拖拽
-     */
-    private void addItem() {
-
+    private void registerMaskStateReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ROBOT_MASK_CHANGE);
+        registerReceiver(maskBroadCast, filter);
     }
 
+    String ROBOT_MASK_CHANGE = "android.intent.action.MASK_CHANGED";
+    public final static String KEYCODE_MASK_ONPROGRESS = "KEYCODE_MASK_ONPROGRESS";
+    public final static String KEYCODE_MASK_CLOSE = "KEYCODE_MASK_CLOSE";
+    public final static String KEYCODE_MASK_OPEN = "KEYCODE_MASK_OPEN";
+
+    private BroadcastReceiver maskBroadCast = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(final Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals(ROBOT_MASK_CHANGE)) {
+                boolean maskOnProgress = intent.getBooleanExtra(KEYCODE_MASK_ONPROGRESS, false);
+                boolean maskClose = intent.getBooleanExtra(KEYCODE_MASK_CLOSE, false);
+                boolean maskOpen = intent.getBooleanExtra(KEYCODE_MASK_OPEN, false);
+
+                if (maskClose) {
+                    if (isNeedStartService) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                //重新排序
+                                dbManager.deleteMoreExecuteItems(executeModuleList);
+                                for (int i = 0; i < executeModuleList.size(); i++) {
+                                    dbManager.insertExcuteItem(executeModuleList
+                                            .get(i));
+                                }
+                                Intent intentService = new Intent(context, ProgrammeGameService.class);
+                                context.startService(intentService);
+                            }
+                        });
+
+                    }
+                }
+
+            }
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isNeedStartService = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isNeedStartService = false;
+        PreferencesUtils.putInt(this, "currentSelectId", currentSelectId);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(maskBroadCast);
+
+    }
 }

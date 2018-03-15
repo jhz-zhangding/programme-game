@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.efrobot.programme"
-        minSdkVersion 15
+        minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -30,4 +30,6 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:27.1.0'
     //时间选择器 github上的项目https://github.com/Bigkoo/Android-PickerView
     compile 'com.contrarywind:Android-PickerView:3.2.7'
+
+    compile 'com.efrobot.library:framework:1.0.58'
 }

@@ -13,8 +13,9 @@ public class Constans {
         public final static int TTS_TYPE = 4;
         public final static int ACTION_TYPE = 5;
         public final static int FACE_TYPE = 6;
+        public final static int TTS_INPUT_TYPE = 7;
 
-        public final static int TOTAL_VIEW_COUNT = 4;
+        public final static int TOTAL_VIEW_COUNT = 5;
     }
 
 }

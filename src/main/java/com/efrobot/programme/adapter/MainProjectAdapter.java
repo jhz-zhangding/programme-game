@@ -27,7 +27,7 @@ public class MainProjectAdapter extends BaseCommAdapter<MainProject> {
 
     private DBManager dbManager;
 
-    int selectPosition = 0;
+    int id = 0;
 
     public MainProjectAdapter(List<MainProject> datas) {
         super(datas);
@@ -38,8 +38,8 @@ public class MainProjectAdapter extends BaseCommAdapter<MainProject> {
         notifyDataSetChanged();
     }
 
-    public void setSelectPosition(int selectPosition) {
-        this.selectPosition = selectPosition;
+    public void setSelectPosition(int id) {
+        this.id = id;
         notifyDataSetChanged();
     }
 
@@ -68,7 +68,7 @@ public class MainProjectAdapter extends BaseCommAdapter<MainProject> {
             delImage.setVisibility(View.GONE);
         }
 
-        if (position == selectPosition) {
+        if (mainProject.getId() == id) {
             relativeLayout.setBackgroundResource(R.color.item_select);
         } else {
             relativeLayout.setBackgroundColor(Color.parseColor("#01000000"));
@@ -81,7 +81,7 @@ public class MainProjectAdapter extends BaseCommAdapter<MainProject> {
                 if (onItemDeleteListener != null) {
                     onItemDeleteListener.onDelete(mainProject.getId());
                 }
-                dbManager.deleteExcuteItem(mainProject.getId());
+                dbManager.deleteProjectItem(mainProject.getId());
                 mDatas.remove(position);
                 notifyDataSetChanged();
             }

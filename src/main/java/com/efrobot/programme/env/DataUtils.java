@@ -45,6 +45,7 @@ public class DataUtils {
 
     public static List<String> getTtsList() {
         List<String> strings = new ArrayList<>();
+        strings.add("");
         strings.add("福建省的客户的风格");
         strings.add("东方国际时尚的了解过");
         strings.add("的方式更健康地方的风格的风格地方");
