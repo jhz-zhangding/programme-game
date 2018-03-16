@@ -1,11 +1,11 @@
 {
     "actions": [
         {
-            "next_action_time": 2000,
+            "next_action_time": 4000,
             "message": "身体左转90°",
             "wheel": {
                 "direction": "left_angle",
-                "speed": 200,
+                "speed": 100,
                 "angle": 90
             }
         },

@@ -110,7 +110,7 @@ public class ActionService extends Service implements OnRobotStateChangeListener
 
         @Override
         public void onStop() {
-            handler.sendEmptyMessage(START_EXECUTE_MESSAGE);
+            handler.sendEmptyMessageDelayed(START_EXECUTE_MESSAGE, 500);
         }
     };
 

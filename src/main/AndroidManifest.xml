@@ -17,7 +17,9 @@
             <!--</intent-filter>-->
         </activity>
 
-        <activity android:name="com.efrobot.programme.main.RouteCtrolActivity">
+        <activity
+            android:name="com.efrobot.programme.main.RouteCtrolActivity"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

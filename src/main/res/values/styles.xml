@@ -9,7 +9,7 @@
     </style>
 
     <!-- 无黑色背景的dialog -->
-    <style name="NewSettingDialog" parent="@android:style/Theme.Dialog">
+    <style name="NewSettingDialog">
         <item name="android:windowFrame">@null</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">true</item>
@@ -21,6 +21,12 @@
         <item name="android:backgroundDimEnabled">true</item>
         <!-- 是否是黑色背景 -->
         <!-- 模糊 -->
+    </style>
+
+    <style name="text_nomal">
+        <item name="android:textSize">@dimen/textsize_20</item>
+        <item name="android:textColor">@color/hint_diakog_cancle_textcoklor</item>
+        <item name="android:gravity">center</item>
     </style>
 
 </resources>

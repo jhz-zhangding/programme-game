@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">儿童编程</string>
+    <string name="app_name">少儿编程</string>
 
     <string-array name="mouse_key">
         <item>电源</item>

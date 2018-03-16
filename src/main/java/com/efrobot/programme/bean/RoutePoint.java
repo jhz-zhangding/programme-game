@@ -12,11 +12,14 @@ public class RoutePoint {
     @DatabaseField(generatedId = true, columnName = "_id")
     public int id;
 
-    @DatabaseField(columnName = "x")
+    @DatabaseField(columnName = "pointX")
     private int pointX;
 
-    @DatabaseField(columnName = "y")
+    @DatabaseField(columnName = "pointY")
     private int pointY;
+
+    @DatabaseField(columnName = "currentDirection")
+    private int currentDirection;
 
     public int getId() {
         return id;
@@ -40,5 +43,13 @@ public class RoutePoint {
 
     public void setPointY(int pointY) {
         this.pointY = pointY;
+    }
+
+    public int getCurrentDirection() {
+        return currentDirection;
+    }
+
+    public void setCurrentDirection(int currentDirection) {
+        this.currentDirection = currentDirection;
     }
 }

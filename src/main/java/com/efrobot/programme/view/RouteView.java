@@ -1,6 +1,8 @@
 package com.efrobot.programme.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -10,7 +12,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
+import com.efrobot.programme.R;
 import com.efrobot.programme.bean.RouteAction;
 import com.efrobot.programme.bean.RoutePoint;
 import com.efrobot.programme.db.DBManager;
@@ -30,17 +34,21 @@ public class RouteView extends View {
 
     private final String TAG = RouteView.class.getSimpleName();
 
-    private boolean isRestoreView = false;
-
     Paint routeViewPaint;
 
     Paint imagePaint = new Paint();
 
+    //行
     private int row = 10;
 
+    //列
     private int column = 10;
 
+    //格子大小
     private int viewSize = 70;
+
+    //重做
+    private boolean isRestoreView = false;
 
     //手指按下坐标
     private int mDownX = -1;
@@ -59,6 +67,7 @@ public class RouteView extends View {
     private final int LEFT = 3;
     private final int RIGHT = 4;
 
+    //是否有发送移动指令
     private boolean isHasOrder = false;
     private int currentOrder = 0;
 
@@ -66,6 +75,15 @@ public class RouteView extends View {
     public static final int GO_BACK = 2;
     public static final int TURN_LEFT = 3;
     public static final int TURN_RIGHT = 4;
+
+    private Bitmap backBitmap;
+    private Bitmap frontBitmap;
+    private Bitmap leftBitmap;
+    private Bitmap rightBitmap;
+
+    //图片相对格子的偏移量
+    private int offSetX = 10;
+    private int offSetY = 10;
 
     public RouteView(Context context) {
         super(context);
@@ -82,14 +100,49 @@ public class RouteView extends View {
         init();
     }
 
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+    }
+
+    public void setRow(int row) {
+        this.row = row;
+    }
+
+    public void setColumn(int column) {
+        this.column = column;
+    }
+
+    public void setViewSize(int viewSize) {
+        this.viewSize = viewSize;
+    }
+
     private void init() {
         routeViewPaint = new Paint();
         routeViewPaint.setColor(Color.BLACK);
 
         imagePaint.setTextSize(10);
-        imagePaint.setColor(0xffff0000);
+        imagePaint.setColor(0x90ff0000);
         dbManager = new DBManager(getContext());
         routePointList.addAll(dbManager.queryRoutePointItems());
+
+        if (routePointList.size() > 0) {
+            mImageDownX = routePointList.get(routePointList.size() - 1).getPointX();
+            mImageDownY = routePointList.get(routePointList.size() - 1).getPointY();
+        }
+
+        backBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.robot_back);
+        frontBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.robot_front);
+        leftBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.robot_left);
+        rightBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.robot_right);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        //获取默认的宽高值
+        setMeasuredDimension(column * viewSize, row * viewSize);
     }
 
     @Override
@@ -105,20 +158,26 @@ public class RouteView extends View {
             if (routePointList.size() == 0) {
                 if (!isHasFirstRobotImg && mDownX != -1) {
                     getCoordinateFromPoint(mDownX, mDownY, canvas);
+                    mDownX = -1;
                 }
             } else {
-                drawImage(canvas);
-            }
-
-            if (isHasOrder) {
-                drawRobotRouteImage(currentOrder, canvas);
-                isHasOrder = false;
+                if (isHasOrder) {
+                    drawRobotRouteImage(currentOrder, canvas);
+                    isHasOrder = false;
+                } else {
+                    drawImage(canvas);
+                }
             }
 
         }
 
     }
 
+    /**
+     * 路线图
+     *
+     * @param canvas
+     */
     private void drawLayout(Canvas canvas) {
         //画行
         for (int i = 0; i < row + 1; i++) {
@@ -152,6 +211,13 @@ public class RouteView extends View {
         return true;
     }
 
+    /**
+     * 获取手指按压下的格子坐标
+     *
+     * @param mDownX
+     * @param mDownY
+     * @param canvas
+     */
     private void getCoordinateFromPoint(int mDownX, int mDownY, Canvas canvas) {
         //x点所在方格原点
         int columnX = mImageDownX = mDownX / viewSize * viewSize;
@@ -173,6 +239,7 @@ public class RouteView extends View {
         RoutePoint routePoint = new RoutePoint();
         routePoint.setPointX(x);
         routePoint.setPointY(y);
+        routePoint.setCurrentDirection(currentDirection);
         routePointList.add(routePoint);
         drawImage(canvas);
         //入库
@@ -191,6 +258,27 @@ public class RouteView extends View {
             Rect rect = new Rect(mDownX, mDownY, mDownX + viewSize, mDownY + viewSize);
             canvas.drawRect(rect, imagePaint);
         }
+        if (routePointList.size() > 0) {
+            RoutePoint routePoint = routePointList.get(routePointList.size() - 1);
+            int mX = routePoint.getPointX() + offSetX;
+            int mY = routePoint.getPointY() + offSetY;
+            currentDirection = routePoint.getCurrentDirection();
+            switch (currentDirection) {
+                case DOWN:
+                    canvas.drawBitmap(frontBitmap, mX, mY, null);
+                    break;
+                case UP:
+                    canvas.drawBitmap(backBitmap, mX, mY, null);
+                    break;
+                case LEFT:
+                    canvas.drawBitmap(leftBitmap, mX, mY, null);
+                    break;
+                case RIGHT:
+                    canvas.drawBitmap(rightBitmap, mX, mY, null);
+                    break;
+
+            }
+        }
     }
 
     /**
@@ -198,132 +286,140 @@ public class RouteView extends View {
      * @param canvas
      */
     private void drawRobotRouteImage(int order, Canvas canvas) {
-        if (currentOrder != 0) {
-            if (isHasFirstRobotImg) {
-                switch (order) {
-                    case GO_FRONT:
-                        //机器人正面朝下
-                        if (currentDirection == DOWN) {
-                            //向下走一格
-                            if (isPositionValid(mImageDownX, mImageDownY + viewSize)) {
-                                mImageDownY += viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_FRONT);
-                            } else {
-                                drawImage(canvas);
-                            }
-                            Log.e(TAG, "mImageDownY = " + mImageDownY);
-                        } else if (currentDirection == UP) {
-                            //向上走一格
-                            if (isPositionValid(mImageDownX, mImageDownY - viewSize)) {
-                                mImageDownY -= viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_FRONT);
-                            } else {
-                                drawImage(canvas);
-                            }
-                        } else if (currentDirection == LEFT) {
-                            //向左走一格
-                            if (isPositionValid(mImageDownX - viewSize, mImageDownY)) {
-                                mImageDownX -= viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_FRONT);
-                            } else {
-                                drawImage(canvas);
-                            }
-                        } else if (currentDirection == RIGHT) {
-                            //向右走一格
-                            if (isPositionValid(mImageDownX + viewSize, mImageDownY)) {
-                                mImageDownX += viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_FRONT);
-                            } else {
-                                drawImage(canvas);
-                            }
-                        }
-
-                        break;
-                    case GO_BACK:
-                        //机器人正面朝下
-                        if (currentDirection == DOWN) {
-                            //向上走一格
-                            if (isPositionValid(mImageDownX, mImageDownY - viewSize)) {
-                                mImageDownY -= viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_BACK);
-                            } else {
-                                drawImage(canvas);
-                            }
-                        } else if (currentDirection == UP) {
-                            //向下走一格
-                            if (isPositionValid(mImageDownX, mImageDownY - viewSize)) {
-                                mImageDownY -= viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_BACK);
-                            } else {
-                                drawImage(canvas);
-                            }
+        if (routePointList.size() > 0) {
+            switch (order) {
+                case GO_FRONT:
+                    //机器人正面朝下
+                    if (currentDirection == DOWN) {
+                        //向下走一格
+                        if (isPositionValid(mImageDownX, mImageDownY + viewSize)) {
                             mImageDownY += viewSize;
-                        } else if (currentDirection == LEFT) {
-                            //向右走一格
-                            if (isPositionValid(mImageDownX + viewSize, mImageDownY)) {
-                                mImageDownX += viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_BACK);
-                            } else {
-                                drawImage(canvas);
-                            }
-                        } else if (currentDirection == RIGHT) {
-                            //向左走一格
-                            if (isPositionValid(mImageDownX - viewSize, mImageDownY)) {
-                                mImageDownX -= viewSize;
-                                addPoint(mImageDownX, mImageDownY, canvas);
-                                addRouteActionToDb(GO_BACK);
-                            } else {
-                                drawImage(canvas);
-                            }
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_FRONT);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能前进啦");
                         }
-                        break;
-                    case TURN_LEFT:
-                        //左转向
-                        switch (currentDirection) {
-                            case DOWN:
-                                currentDirection = RIGHT;
-                                break;
-                            case UP:
-                                currentDirection = LEFT;
-                                break;
-                            case LEFT:
-                                currentDirection = DOWN;
-                                break;
-                            case RIGHT:
-                                currentDirection = UP;
-                                break;
+                        Log.e(TAG, "mImageDownY = " + mImageDownY);
+                    } else if (currentDirection == UP) {
+                        //向上走一格
+                        if (isPositionValid(mImageDownX, mImageDownY - viewSize)) {
+                            mImageDownY -= viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_FRONT);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能前进啦");
                         }
-                        drawImage(canvas);
-                        addRouteActionToDb(TURN_LEFT);
-                        break;
-                    case TURN_RIGHT:
-                        //右转向
-                        switch (currentDirection) {
-                            case DOWN:
-                                currentDirection = LEFT;
-                                break;
-                            case UP:
-                                currentDirection = RIGHT;
-                                break;
-                            case LEFT:
-                                currentDirection = UP;
-                                break;
-                            case RIGHT:
-                                currentDirection = DOWN;
-                                break;
+                    } else if (currentDirection == LEFT) {
+                        //向左走一格
+                        if (isPositionValid(mImageDownX - viewSize, mImageDownY)) {
+                            mImageDownX -= viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_FRONT);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能前进啦");
                         }
-                        drawImage(canvas);
-                        addRouteActionToDb(TURN_RIGHT);
-                        break;
-                }
+                    } else if (currentDirection == RIGHT) {
+                        //向右走一格
+                        if (isPositionValid(mImageDownX + viewSize, mImageDownY)) {
+                            mImageDownX += viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_FRONT);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能前进啦");
+                        }
+                    }
+
+                    break;
+                case GO_BACK:
+                    //机器人正面朝下
+                    if (currentDirection == DOWN) {
+                        //向上走一格
+                        if (isPositionValid(mImageDownX, mImageDownY - viewSize)) {
+                            mImageDownY -= viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_BACK);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能后退啦");
+                        }
+                    } else if (currentDirection == UP) {
+                        //向下走一格
+                        if (isPositionValid(mImageDownX, mImageDownY + viewSize)) {
+                            mImageDownY += viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_BACK);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能后退啦");
+                        }
+                    } else if (currentDirection == LEFT) {
+                        //向右走一格
+                        if (isPositionValid(mImageDownX + viewSize, mImageDownY)) {
+                            mImageDownX += viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_BACK);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能后退啦");
+                        }
+                    } else if (currentDirection == RIGHT) {
+                        //向左走一格
+                        if (isPositionValid(mImageDownX - viewSize, mImageDownY)) {
+                            mImageDownX -= viewSize;
+                            addPoint(mImageDownX, mImageDownY, canvas);
+                            addRouteActionToDb(GO_BACK);
+                        } else {
+                            drawImage(canvas);
+                            toast("机器人已到达边缘，不能后退啦");
+                        }
+                    }
+                    break;
+                case TURN_LEFT:
+                    //左转向
+                    switch (currentDirection) {
+
+                        case DOWN:
+                            currentDirection = RIGHT;
+                            break;
+                        case UP:
+                            currentDirection = LEFT;
+                            break;
+                        case LEFT:
+                            currentDirection = DOWN;
+                            break;
+                        case RIGHT:
+                            currentDirection = UP;
+                            break;
+                    }
+                    addRouteActionToDb(TURN_LEFT);
+                    addPoint(mImageDownX, mImageDownY, canvas);
+                    break;
+                case TURN_RIGHT:
+                    //右转向
+                    switch (currentDirection) {
+                        case DOWN:
+                            currentDirection = LEFT;
+                            break;
+                        case UP:
+                            currentDirection = RIGHT;
+                            break;
+                        case LEFT:
+                            currentDirection = UP;
+                            break;
+                        case RIGHT:
+                            currentDirection = DOWN;
+                            break;
+                    }
+                    addRouteActionToDb(TURN_RIGHT);
+                    addPoint(mImageDownX, mImageDownY, canvas);
+                    break;
             }
+        } else {
+            Toast.makeText(getContext(), "请选择起点", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -344,6 +440,9 @@ public class RouteView extends View {
      * @param order
      */
     public void moveRobot(int order) {
+        if (routePointList.size() == 0) {
+            toast("请先在方格中选择机器人开始的位置");
+        }
         currentOrder = order;
         isHasOrder = true;
         invalidate();
@@ -359,11 +458,19 @@ public class RouteView extends View {
 
         routePointList.clear();
 
+        currentDirection = 1;
+
+        currentOrder = 0;
+
         invalidate();
 
         //删除所有数据
         dbManager.deleteRouteAction(dbManager.queryRouteActionItems());
         dbManager.deleteRoutePoint(dbManager.queryRoutePointItems());
+
+        if (onAddActionListener != null) {
+            onAddActionListener.onAdd();
+        }
     }
 
     /**
@@ -371,14 +478,20 @@ public class RouteView extends View {
      */
     public void revokeView() {
         if (routePointList.size() > 0) {
+            if (routePointList.size() == 1) {
+                isHasFirstRobotImg = false;
+            }
             routePointList.remove(routePointList.size() - 1);
+            List<RouteAction> actionList = dbManager.queryRouteActionItems();
+            if (actionList != null && actionList.size() > 0) {
+                dbManager.deleteRouteAction(actionList.get(actionList.size() - 1));
+            }
+            invalidate();
         }
 
-        List<RouteAction> actionList = dbManager.queryRouteActionItems();
-        if (actionList != null && actionList.size() > 0) {
-            dbManager.deleteRouteAction(actionList.get(actionList.size() - 1));
+        if (onAddActionListener != null) {
+            onAddActionListener.onAdd();
         }
-        invalidate();
     }
 
     private void addRouteActionToDb(int type) {
@@ -386,23 +499,45 @@ public class RouteView extends View {
         switch (type) {
             case GO_FRONT:
                 routeAction.setActionId("2008");
-                routeAction.setActionName("前进");
+                routeAction.setActionName("前进一格");
                 break;
             case GO_BACK:
                 routeAction.setActionId("2009");
-                routeAction.setActionName("后退");
+                routeAction.setActionName("后退一格");
                 break;
             case TURN_LEFT:
                 routeAction.setActionId("5");
-                routeAction.setActionName("左转");
+                routeAction.setActionName("左转90°");
                 break;
             case TURN_RIGHT:
                 routeAction.setActionId("6");
-                routeAction.setActionName("右转");
+                routeAction.setActionName("右转90°");
                 break;
         }
         dbManager.insertRouteAction(routeAction);
+        if (onAddActionListener != null) {
+            onAddActionListener.onAdd();
+        }
     }
 
+    private OnAddActionListener onAddActionListener;
+
+    public void setOnAddActionListener(OnAddActionListener onAddActionListener) {
+        this.onAddActionListener = onAddActionListener;
+    }
+
+    public interface OnAddActionListener {
+        void onAdd();
+    }
+
+    private Toast mToast;
+
+    public void toast(String info) {
+        if (mToast == null) {
+            mToast = Toast.makeText(getContext(), "", Toast.LENGTH_SHORT);
+        }
+        mToast.setText(info);
+        mToast.show();
+    }
 
 }

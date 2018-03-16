@@ -2,10 +2,10 @@
     "actions": [
         {
             "message": "双轮后退",
-            "next_action_time": 2500,
+            "next_action_time": 5000,
             "wheel": {
                 "direction": "back",
-                "speed": 200
+                "speed": 100
             }
         },
         {
